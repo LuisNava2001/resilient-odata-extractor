@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OData Extractor Demo</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="top">
+    <div class="wrap">
+      <h1>Resilient OData Extractor <span class="sub">what happens when a paged API returns plausible but wrong data</span></h1>
+      <p class="lede">
+        Each scenario is a real run of the extraction client against the local mock OData service, which injects a
+        specific provider fault. Synthetic data (fictional company). Waits are computed and recorded on a virtual
+        clock; timeouts are real.
+      </p>
+      <p class="badges">
+        <span class="badge badge-strong">Recorded runs: fixed seed, no network beyond localhost</span>
+        <span class="badge" id="summary-badge"></span>
+      </p>
+    </div>
+  </header>
+
+  <main class="wrap layout">
+    <nav class="list" aria-label="Scenarios">
+      <h2>Scenarios</h2>
+      <ol id="scenario-list"></ol>
+      <p class="legend">Status meanings: <b>COMPLETE</b> evidence agrees; <b>INCOMPLETE</b> records provably missing or
+        unusable; <b>INDETERMINATE</b> completeness cannot be shown; <b>FAILED</b> technical error.</p>
+    </nav>
+    <article class="detail" id="detail" aria-live="polite"></article>
+  </main>
+
+  <footer class="wrap foot">
+    Regenerate with <code>python -m odata_extractor demo --out demo/data.js</code>.
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

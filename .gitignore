@@ -1,0 +1,25 @@
+# Python caches, packaging and virtual environments
+__pycache__/
+*.py[cod]
+*.egg-info/
+/build/
+/dist/
+.venv/
+venv/
+.pytest_cache/
+
+# Generated locally (anchored to the repo root: odata_extractor/data/ is source)
+/output/
+/data/
+
+# Local secrets and configuration (none are used or committed)
+.env
+.env.*
+*.key
+*.pem
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

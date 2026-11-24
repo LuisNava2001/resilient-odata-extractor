@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: tests (${{ matrix.os }}, Python ${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # Runtime has no dependencies; pytest is the only development dependency.
+      - name: Install
+        run: python -m pip install -e ".[dev]"
+
+      # Unit, mock-server, end-to-end (real loopback HTTP), CLI and PowerShell 7 wrapper tests.
+      - name: Tests
+        run: python -m pytest -v
+
+      - name: Every failure scenario reaches its expected status; demo data is up to date
+        run: python -m odata_extractor demo --out demo/data.js --check
+
+      - name: CLI smoke test
+        shell: bash
+        run: |
+          python -m odata_extractor scenarios
+          python -m odata_extractor seed --out data/dataset.json
