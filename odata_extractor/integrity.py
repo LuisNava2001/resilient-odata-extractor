@@ -10,12 +10,13 @@ INCOMPLETE    There is positive evidence that records are missing or unusable: r
               extracted.
 INDETERMINATE No evidence of loss, but completeness cannot be demonstrated: $count changed during the
               extraction (no consistent snapshot), duplicates disagree on content, more unique records than
-              $count, records extracted that the server no longer lists, or no count and no reconciliation.
-COMPLETE      Paging ended normally, every key is valid and unique after removing identical duplicates, and the
-              available evidence agrees: a stable $count equal to the unique count, and (when the provider
-              supports it) an independent key reconciliation with exactly the same ID set. Anomalies such as
-              identical duplicates are reported as warnings and are only tolerated when the reconciliation
-              confirms the set.
+              $count, records extracted that the server no longer lists, no count and no reconciliation, or a
+              stable $count that matches but no reconciliation to confirm which records arrived (COUNT_ONLY).
+COMPLETE      Paging ended normally, every key is valid and unique after removing identical duplicates, the
+              $count (when provided) was stable and equals the unique count, and an independent key
+              reconciliation returned exactly the same ID set. Without a reconciliation there is no COMPLETE.
+              Anomalies such as identical duplicates are reported as warnings and are only tolerated when the
+              reconciliation confirms the set.
 
 COMPLETE means complete as far as the protocol and this provider let us check. It says nothing about whether the
 field values themselves are correct, and a matching count alone is never treated as proof.
@@ -195,6 +196,11 @@ def assess(run: Extraction) -> IntegrityReport:
         elif identical_duplicates or order_violations or any(f["code"] == "DUPLICATE_PAGE" for f in run.client_findings):
             indeterminate.append("ANOMALIES_UNVERIFIED")
             reason("ANOMALIES_UNVERIFIED", "paging anomalies occurred and no independent reconciliation was available to rule out loss")
+        elif not incomplete and not indeterminate:
+            # Everything else agrees, but the only completeness evidence is the count: same number is not same records.
+            indeterminate.append("COUNT_ONLY")
+            reason("COUNT_ONLY", f"@odata.count was stable and equals the {unique} unique records, but no independent key "
+                   f"reconciliation was available ({why}); a matching count alone does not show which records arrived")
 
     if run.stop_reason == "end":
         report.basis.insert(0, "paging ended normally (last page had no nextLink)")

@@ -18,6 +18,17 @@ def test_extract_exit_codes(tmp_path, capsys, scenario, code) -> None:
     assert out.startswith("WorkOrders: ")
 
 
+def test_no_reconcile_cannot_reach_complete(tmp_path, capsys) -> None:
+    """A healthy provider with the key reconciliation switched off: the count matches, but that alone is not proof."""
+    with served("healthy") as server:
+        result = main(["extract", "--base-url", server.url, "--entity", "WorkOrders", "--output", str(tmp_path),
+                       "--no-reconcile", *FAST])
+    assert result == 3
+    integrity = json.loads((tmp_path / "WorkOrders" / "report.json").read_text(encoding="utf-8"))["integrity"]
+    assert integrity["status"] == "INDETERMINATE"
+    assert [r["code"] for r in integrity["reasons"]] == ["COUNT_ONLY"]
+
+
 def test_extract_then_validate(tmp_path, capsys) -> None:
     with served("healthy") as server:
         assert main(["extract", "--base-url", server.url, "--entity", "Technicians", "--output", str(tmp_path), *FAST]) == 0

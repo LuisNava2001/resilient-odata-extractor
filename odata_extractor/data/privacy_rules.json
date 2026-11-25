@@ -1,5 +1,5 @@
 {
-  "description": "Publishing rules for the fictional maintenance dataset. Raw output keeps records as received; publishable output applies these rules plus a global safety net that replaces any remaining email address or phone number inside strings.",
+  "description": "Publishing rules for the fictional maintenance dataset. Raw output keeps records as received; publishable output applies these rules plus a global safety net that replaces any remaining email address or international (+-prefixed) phone number inside strings.",
   "entities": {
     "Technicians": {"drop": ["Phone"], "mask_email": ["Email"], "pseudonymize": ["EmployeeNumber"], "redact": ["FullName"], "redact_text": []},
     "MaintenanceRequests": {"drop": [], "mask_email": ["RequestedByEmail"], "pseudonymize": [], "redact": ["RequestedByName"], "redact_text": ["Notes"]},

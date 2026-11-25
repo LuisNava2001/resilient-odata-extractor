@@ -11,11 +11,11 @@ Evaluated in this order; the first that applies wins.
 | --- | --- |
 | **FAILED** | A technical error ended the run: retries exhausted, persistent timeout, malformed body, unsafe nextLink, non-retryable HTTP status, request or page budget exceeded, or `$metadata` unreachable for a reason other than "not provided". No completeness claim is made. |
 | **INCOMPLETE** | Positive evidence of missing or unusable records: a record with a missing or mistyped key (quarantined); paging stopped by a nextLink cycle; a stable `@odata.count` greater than the unique records; an empty page ending paging while records were still expected; the key reconciliation lists IDs that were not extracted. |
-| **INDETERMINATE** | No evidence of loss, but completeness cannot be shown: `@odata.count` changed during the run; duplicates of a key with different content; more unique records than the count; extracted IDs the server no longer lists; no count and no reconciliation; paging anomalies with no reconciliation to rule out loss. |
-| **COMPLETE** | Paging ended normally, every key is valid and unique after removing identical duplicates, the count (when provided) was stable and equals the unique records, and the reconciliation (when available) returned exactly the same IDs. Identical duplicates are tolerated only when the reconciliation confirms the set. |
+| **INDETERMINATE** | No evidence of loss, but completeness cannot be shown: `@odata.count` changed during the run; duplicates of a key with different content; more unique records than the count; extracted IDs the server no longer lists; no count and no reconciliation; paging anomalies with no reconciliation to rule out loss; a stable count that matches the unique records but no key reconciliation to confirm which records they are (`COUNT_ONLY`: the provider cannot filter on the key, or `--no-reconcile`). |
+| **COMPLETE** | Paging ended normally, every key is valid and unique after removing identical duplicates, the count (when provided) was stable and equals the unique records, and the key reconciliation returned exactly the same IDs. Without a reconciliation there is no COMPLETE. Identical duplicates are tolerated only when the reconciliation confirms the set. |
 
-The report always lists the checks that passed, so a reader can see whether COMPLETE rests on the count alone or
-on the count and the key reconciliation.
+The report always lists the checks that passed (`basis`). A consistent count is recorded there as a passed check,
+but on its own it only leads to INDETERMINATE: the same number of records is not proof of the same records.
 
 ## What can be verified
 
@@ -33,8 +33,10 @@ on the count and the key reconciliation.
   changes in the total. An update that leaves the total unchanged is invisible without change tracking (delta
   links, ETags or a modification timestamp), which this MVP does not use.
 - **That the reconciliation is right.** It is a second read of the same provider. Agreement makes a silent loss
-  unlikely; it is not proof against a provider that is consistently wrong in both read paths.
-- **Completeness without a count or a key filter.** Then the honest answer is INDETERMINATE.
+  unlikely; it is not proof against a provider that is consistently wrong in both read paths. In the mock, faults
+  only affect requests without `$filter`, so the reconciliation always sees the true data; a real provider gives no
+  such guarantee.
+- **Completeness without a key filter.** Then the honest answer is INDETERMINATE, even when the count matches.
 
 ## A matching count is not proof
 

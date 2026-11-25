@@ -12,9 +12,9 @@ a replayed page, a nextLink that loops, a page with three records missing, a dat
 through it. This project handles the loud failures with bounded, polite retries, and detects the quiet ones. Every
 run ends in one of four statuses:
 
-- **COMPLETE**: the evidence agrees;
+- **COMPLETE**: the count (when provided) and an independent key reconciliation agree;
 - **INCOMPLETE**: records are provably missing or unusable;
-- **INDETERMINATE**: completeness cannot be shown;
+- **INDETERMINATE**: completeness cannot be shown, including when only the count matches;
 - **FAILED**: a technical error.
 
 Each status comes with its reasons.
@@ -100,13 +100,17 @@ Tokens come from an environment variable and never appear in any output. Details
 | --- | --- |
 | FAILED | A technical error ended the run; no completeness claim |
 | INCOMPLETE | Invalid keys, a cycle, a stable count above the unique records, an early empty page, or IDs found by reconciliation but not extracted |
-| INDETERMINATE | The count changed mid-run, conflicting duplicates, more records than the count, IDs no longer on the server, or nothing to verify against |
-| COMPLETE | Normal end, valid unique keys, stable count equal to unique records, and reconciliation agreeing when available |
+| INDETERMINATE | The count changed mid-run, conflicting duplicates, more records than the count, IDs no longer on the server, nothing to verify against, or a matching count with no key reconciliation to confirm it (`COUNT_ONLY`, for example with `--no-reconcile`) |
+| COMPLETE | Normal end, valid unique keys, a stable count (when provided) equal to the unique records, and a key reconciliation that returned exactly the same IDs |
 
 **A matching count is not proof.** In the `dataset_shift` scenario the final count equals the 416 records received,
 yet 4 existing records were skipped and 4 deleted ones were included. The key reconciliation exposes this and the
 status is INCOMPLETE. `$skip` and `$orderby` alone do not give a consistent snapshot, and this tool does not
 pretend otherwise. See [docs/integrity.md](docs/integrity.md).
+
+In the mock, faults are injected only into the offset-paged requests (those without `$filter`); the key
+reconciliation uses `$filter`, so it always reads the true data. Against a real provider both reads hit the same
+backend and could be wrong in the same way.
 
 ## 8. Quick Start
 
@@ -163,10 +167,10 @@ Suggested path:
 
 ## 10. Testing
 
-136 pytest tests, including end-to-end runs over real loopback HTTP for all 15 scenarios. No test sleeps for
+138 pytest tests, including end-to-end runs over real loopback HTTP for all 15 scenarios. No test sleeps for
 retries: waits use a virtual clock and seeded jitter.
 
-Latest local run (2026-11-23, Windows, Python 3.11, PowerShell 7.6): 136 passed, 0 skipped. GitHub Actions runs the
+Latest local run (2026-11-25, Windows, Python 3.11, PowerShell 7.6): 138 passed, 0 skipped. GitHub Actions runs the
 suite, the scenario check and a CLI smoke test on Ubuntu and Windows with Python 3.11 to 3.13; results are in the
 repository's Actions tab. Inventory: [docs/testing.md](docs/testing.md).
 
@@ -184,7 +188,8 @@ repository's Actions tab. Inventory: [docs/testing.md](docs/testing.md).
 - COMPLETE concerns which records arrived, not whether their values are correct.
 - Updates that do not change the total during a run are invisible without change tracking.
 - The reconciliation reads the same provider a second time; it raises confidence, it is not an oracle.
-- Privacy detection is pattern-based: local phone formats and names in free text can slip through.
+- Privacy detection is pattern-based: only international phone numbers (with a `+` prefix) are detected, so local
+  phone formats and names in free text can slip through.
 - Single-key entity sets only; no resume after interruption; proxies not supported.
 
 ## 13. Roadmap

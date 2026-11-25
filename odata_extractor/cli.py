@@ -180,7 +180,7 @@ def build_parser() -> argparse.ArgumentParser:
     extract.add_argument("--max-pages", type=int, default=1000)
     extract.add_argument("--allow-host", action="append", default=[], help="extra host[:port] nextLinks may point to")
     extract.add_argument("--token-env", help="read a bearer token from this environment variable (never written out)")
-    extract.add_argument("--no-reconcile", action="store_true", help="skip the independent key reconciliation pass")
+    extract.add_argument("--no-reconcile", action="store_true", help="skip the independent key reconciliation pass (the run can then be at best INDETERMINATE)")
     extract.add_argument("--privacy", type=Path, help="privacy rules JSON (default: bundled rules)")
     extract.add_argument("--demo-pseudonym-key", action="store_true", help="use the public demo key for reproducible pseudonyms")
     extract.set_defaults(func=cmd_extract)

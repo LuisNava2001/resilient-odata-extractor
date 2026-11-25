@@ -57,8 +57,8 @@ sequenceDiagram
   engine from what was received.
 - **An independent second read.** After paging, the client lists the key alone with keyset filters
   (`$filter=Key gt last`). Offset paging and keyset paging fail in different ways, so agreement between them is
-  much stronger evidence than a count. It is optional and degrades to "unavailable" when the provider cannot
-  filter on the key.
+  much stronger evidence than a count. It degrades to "unavailable" when the provider cannot filter on the key (or
+  with `--no-reconcile`), and then the best possible status is INDETERMINATE.
 - **Determinism for evidence.** Faults are keyed to page numbers and attempts, waits go through an injectable
   clock, and jitter uses a seeded random generator in tests and in the demo, so every recorded trace is
   reproducible.

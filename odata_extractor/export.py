@@ -87,7 +87,7 @@ def write_outputs(out_dir: Path, run: Extraction, integrity: IntegrityReport, ru
     target.mkdir(parents=True, exist_ok=True)
     published = [apply(r, run.entity, rules, pseudonymizer) for r in integrity.unique_records]
     privacy = {"rules": rules.get("entities", {}).get(run.entity, {}), "pseudonym_key_source": pseudonymizer.source,
-               "safety_net": "emails and phone numbers in any string replaced"}
+               "safety_net": "emails and international (+-prefixed) phone numbers in any string replaced"}
     report = build_report(run, integrity, schema, privacy)
     files: dict[str, bytes] = {
         "raw/records.jsonl": _jsonl(integrity.unique_records),

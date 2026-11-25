@@ -32,11 +32,23 @@ def test_complete_requires_agreeing_evidence() -> None:
     assert any("reconciliation" in b for b in report.basis) and any("stable at 4" in b for b in report.basis)
 
 
-def test_count_only_complete_states_its_basis() -> None:
-    report = assess(make(ALL, counts=[4, 4], recon=Reconciliation(False, [], "HTTP 501")))
-    assert report.status == "COMPLETE"
-    assert not any("reconciliation" in b for b in report.basis)
-    assert "unavailable" in report.counts["reconciliation"]
+def test_a_matching_count_without_reconciliation_is_not_complete() -> None:
+    """Same number of records is not the same records: without a key reconciliation the run stays INDETERMINATE."""
+    for recon in (Reconciliation(False, [], "HTTP 501"), None):  # provider cannot filter, or --no-reconcile
+        report = assess(make(ALL, counts=[4, 4], recon=recon))
+        assert report.status == "INDETERMINATE" and codes(report) == ["COUNT_ONLY"]
+        assert any("stable at 4" in b for b in report.basis)
+        assert not any("reconciliation" in b for b in report.basis)
+        assert "unavailable" in report.counts["reconciliation"]
+
+
+def test_count_only_is_added_only_when_nothing_else_explains_the_status() -> None:
+    shortfall = assess(make([[rec(1), rec(2)], [rec(4)]], counts=[4, 4]))
+    excess = assess(make(ALL, counts=[3, 3]))
+    changed = assess(make(ALL, counts=[3, 4]))
+    for report in (shortfall, excess, changed):
+        assert "COUNT_ONLY" not in codes(report)
+    assert (shortfall.status, excess.status, changed.status) == ("INCOMPLETE", "INDETERMINATE", "INDETERMINATE")
 
 
 def test_failed_overrides_everything() -> None:
