@@ -1,9 +1,19 @@
-# resilient-odata-extractor
+# Resilient OData Extractor
 
-A resilient client for extracting data from OData APIs, with an integrity engine that refuses to call an extraction
-complete when the evidence does not support it. It comes with a local mock OData service that injects deterministic
-provider faults, schema discovery and privacy-aware JSONL/CSV export. Python standard library at runtime; synthetic
-data only.
+A resilient client for paged OData APIs that refuses to call an extraction complete when the evidence does not
+support it. It retries only what is worth retrying, follows only safe nextLinks, reconciles keys independently,
+exports privacy-aware JSONL/CSV, and ends every run in one of four statuses, each with its reasons:
+**COMPLETE**, **INCOMPLETE**, **INDETERMINATE** or **FAILED**.
+
+![Offline demo: deletes during paging leave the count matching but the record set wrong, so the run is INCOMPLETE](docs/img/demo-dataset-shift.png)
+
+**Stack:** Python 3.11+ standard library at runtime · local mock OData v4 service · PowerShell 7 job wrapper ·
+pytest · GitHub Actions (Ubuntu and Windows, Python 3.11 to 3.13). **Try it:** [Quick Start](#8-quick-start) or open
+`demo/index.html` offline.
+
+> **Demo scope.** Every provider fault comes from a local mock service with synthetic data; no third-party OData
+> service, TLS endpoint or proxy has been tested. COMPLETE means the count and an independent key reconciliation
+> agree, not that field values are correct.
 
 ## 1. Project Overview
 
@@ -161,9 +171,7 @@ Suggested path:
 6. `#dataset_shift`
 7. `#no_count` (INDETERMINATE)
 
-![Rate-limited scenario in the demo](docs/img/demo-rate-limit.png)
-
-![Deletes during paging: the count matches, the set does not](docs/img/demo-dataset-shift.png)
+![Rate-limited scenario in the demo: two 429 responses, Retry-After honoured, COMPLETE](docs/img/demo-rate-limit.png)
 
 ## 10. Testing
 
@@ -202,7 +210,10 @@ repository's Actions tab. Inventory: [docs/testing.md](docs/testing.md).
 
 ## 14. AI-Assisted Development Disclosure
 
-Built with AI assistance: the code, tests and documentation were drafted with Claude Code (Anthropic) under the
-author's direction. The author defined the scope, constraints and acceptance criteria and is responsible for
-reviewing and approving every change before publication. Test results, scenario traces and screenshots come from
-actual local runs.
+I designed and directed this project; it was implemented with substantial help from Claude Code (Anthropic). I
+defined the problem, scope, constraints and acceptance criteria, reviewed the design and the results, and decided
+what to publish. Most of the code, tests and documentation were generated with the assistant under that direction,
+which is why the commits carry a `Co-Authored-By` trailer. Results quoted here come from the automated tests,
+evaluations and CI runs in this repository, on synthetic data. They show that the code behaves as described under
+those conditions, not that it is ready for production, and nothing this README marks as simulated, planned or not
+tested has been validated.
